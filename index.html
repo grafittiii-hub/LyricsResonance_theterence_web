@@ -33,6 +33,22 @@
             transition: opacity 2s;
         }
 
+/* 1. 初始隱藏狀態 */
+.theme-toggle, .mute-control {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 1s ease, visibility 1s; /* 增加平滑漸入效果 */
+}
+
+/* 2. 當 App 準備好時（fonts-ready 標籤出現後）顯示 */
+.fonts-ready .theme-toggle, 
+.fonts-ready .mute-control {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
         .progress-bar-bg {
             position: absolute; bottom: 15%; width: 45%; max-width: 140px;
             height: 2px; background: rgba(128,128,128,0.2); border-radius: 2px;
@@ -544,13 +560,13 @@ setTimeout(() => {
             player.playVideo(); 
             let vol = 0;
             fadeInterval = setInterval(() => {
-                vol += 5; 
+                vol += 2; 
                 if (vol >= 100) {
                     vol = 100;
                     clearInterval(fadeInterval);
                 }
                 player.setVolume(vol);
-            }, 30); 
+            }, 40); 
         }
 
         function fadeAudioOut() {
@@ -558,14 +574,14 @@ setTimeout(() => {
             clearInterval(fadeInterval);
             let vol = player.getVolume();
             fadeInterval = setInterval(() => {
-                vol -= 10; 
+                vol -= 25; 
                 if (vol <= 0) {
                     vol = 0;
                     player.pauseVideo(); 
                     clearInterval(fadeInterval);
                 }
                 player.setVolume(vol);
-            }, 60); 
+            }, 50); 
         }
 
         muteBtn.addEventListener('click', (e) => {
