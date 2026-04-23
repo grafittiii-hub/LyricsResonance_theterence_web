@@ -20,7 +20,7 @@
             z-index: 9999; display: flex; flex-direction: column;
             align-items: center; justify-content: space-between;
             padding: 40vh 0 10vh 0; box-sizing: border-box;
-            transition: opacity 1s ease-in-out, visibility 2s;
+            transition: opacity 1.5s ease
         }
 
         .loader-text {
@@ -50,8 +50,10 @@
 }
 /* 當準備好時，讓載入層立即失去「點擊攔截」功能 */
 .fonts-ready #initial-loader {
+    opacity: 0;
     pointer-events: none;
 }
+
         .progress-bar-bg {
             position: absolute; bottom: 15%; width: 45%; max-width: 140px;
             height: 2px; background: rgba(128,128,128,0.2); border-radius: 2px;
@@ -119,22 +121,36 @@
 
         #bg-canvas { position: absolute; top: 0; left: 0; z-index: 0; }
 
-	.tutorial-overlay {
+.tutorial-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /* 核心：徑向漸變，中心透明，向外變深灰色 */
-    background: radial-gradient(circle at center, transparent 80px, rgba(0, 0, 0, 0.6) 150px);
-    z-index: 5000; /* 低於 loader 但高於其他內容 */
-    display: none; /* 初始隱藏 */
+    background: radial-gradient(circle at center, transparent 185px, rgba(0, 0, 0, 0.6) 450px);
+    z-index: 5000; 
+    
+    /* 改用 flex 和 visibility 配合，保證動畫順暢且不佔位 */
+    display: flex; 
+    visibility: hidden; 
+    opacity: 0;
+    pointer-events: none;
+    
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: opacity 0.5s ease;
-    backdrop-filter: blur(2px); /* 輕微模糊背景更有質感 */
+    touch-action: none;
+    /* 同時為 opacity 和 visibility 設定漸變時間 */
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+    backdrop-filter: blur(2px);
+}
+
+/* 當加上 .active 時真正啟動 */
+.tutorial-overlay.active {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto; 
 }
 
 /* 文字樣式 */
@@ -148,7 +164,7 @@
     color: var(--star-color);
     font-size: 1.2rem;
     letter-spacing: 2px;
-    margin-bottom: 120px; /* 根據星星位置調整，將文字推到星星上方 */
+    margin-bottom: 140px; /* 根據星星位置調整，將文字推到星星上方 */
     text-transform: uppercase;
     animation: bounce 2s infinite;
 }
@@ -159,10 +175,6 @@
     60% {transform: translateY(-5px);}
 }
 
-/* 當 App 準備好時顯示蒙版 */
-.fonts-ready .tutorial-overlay {
-    display: flex;
-}
 
         .theme-toggle {
             position: absolute; top: 25px; right: 20px; z-index: 40;
@@ -299,10 +311,21 @@
         
         .insight-box { 
             font-size: 0.8rem; line-height: 1.65; color: var(--text-sub); text-align: justify; padding: 15px 0 10px 0; 
-            border-top: 0.5px solid rgba(128,128,128,0.15); width: 100%; overflow-y: auto;
+            border-top: 0.5px solid rgba(128,128,128,0.15); width: 100%; overflow-y: auto; 
             opacity: 0; transform: translateY(10px); 
             transition: opacity 0.3s ease, transform 0.3s ease; 
         }
+/* 針對 Chrome, Safari 與較新的 Edge */
+.insight-box::-webkit-scrollbar {
+    display: none;
+}
+
+/* 針對 Firefox */
+.insight-box {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+	
         .card.revealed .insight-box { 
             opacity: 1; transform: translateY(0); 
             transition: opacity 0.8s 0.2s ease, transform 0.8s 0.2s ease; 
@@ -322,7 +345,7 @@
         
         .btn { border-radius: 8px; padding: 11px; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; font-family: 'LXGW WenKai TC', sans-serif; display: flex; align-items: center; justify-content: center; letter-spacing: 0.3em; text-indent: 0.3em; border: 1px solid transparent; /* 預設先給透明邊框 */
     box-sizing: border-box; /* 確保邊框不增加按鈕寬度 */}
-        .btn-primary { background: var(--text-main); color: var(--bg-color); border: 0.5px solid transpbarent; /* 預設透明邊框，防止抖動 */
+        .btn-primary { background: var(--text-main); color: var(--bg-color);border: 0.5px solid transpbarent; /* 預設透明邊框，防止抖動 */
  ; transition: all 0.3s ease;
     cursor: pointer; }
         .btn-secondary { background: transparent; border: 0.5px solid var(--btn-border); color: var(--text-sub);transition: all 0.3s ease;
@@ -484,40 +507,6 @@
         window.addEventListener('resize', resize);
         themeBtn.addEventListener('click', (e) => { e.stopPropagation(); isDark = !isDark; document.body.setAttribute('data-theme', isDark ? 'dark' : 'light'); themeBtn.innerText = isDark ? '⚫︎月球' : '⚪︎地球'; });
 
-	const tutorialOverlay = document.getElementById('tutorial-overlay');
-
-tutorialOverlay.addEventListener('click', (e) => {
-    // 1. 執行 Haptic 反饋
-    triggerHaptic();
-
-    // 2. 【核心】音訊授權解鎖
-    if (isPlayerReady && player) {
-        // 先播放一個「靜音」的動作來騙過瀏覽器
-        player.setVolume(0);
-        player.playVideo();
-        
-        // 0.2秒後暫停，此時授權已完成！
-        setTimeout(() => {
-            player.pauseVideo();
-            player.setVolume(100); // 恢復音量備用
-        }, 200);
-    }
-
-    // 3. 移除蒙版
-    tutorialOverlay.style.opacity = '0';
-    setTimeout(() => {
-        tutorialOverlay.style.display = 'none';
-    }, 500);
-
-    // 4. (選配) 如果用戶點擊的位置剛好是星星，直接觸發翻牌
-    // 如果不加這段，用戶就要再點一次星星才能看歌詞
-    const star = document.querySelector('.placeholder');
-    const rect = star.getBoundingClientRect();
-    if (e.clientX >= rect.left && e.clientX <= rect.right &&
-        e.clientY >= rect.top && e.clientY <= rect.bottom) {
-        star.click();
-    }
-});
 
 
         function getYTIdFromUrl(url) {
@@ -564,6 +553,7 @@ tutorialOverlay.addEventListener('click', (e) => {
             if (item.start === undefined) item.start = 0;
         });
 
+	const tutorialOverlay = document.getElementById('tutorial-overlay');
         const card = document.getElementById('main-card');
         const placeholder = document.getElementById('placeholder');
         const lDisp = document.getElementById('lyrics-display');
@@ -571,8 +561,11 @@ tutorialOverlay.addEventListener('click', (e) => {
         const iDisp = document.getElementById('insight-display');
         const load = document.getElementById('loading');
         const downloadBtn = document.getElementById('download-btn');
+        const resetBtn = document.getElementById('reset-btn');
         const toast = document.getElementById('toast');
         const muteBtn = document.getElementById('mute-btn');
+
+	let isAlreadyStarted = false; //
         
         let current = null;
 
@@ -601,7 +594,154 @@ tutorialOverlay.addEventListener('click', (e) => {
             }
         }
         
+         // ===== 總進度監聽機制 =====
+        let fontsReadyStatus = false;
+        let playerReadyStatus = false;
+
+        function checkOverallReady() {
+            if (fontsReadyStatus && playerReadyStatus) {
+                updateProgress(100);
+
+                setTimeout(() => {
+		// 1. 讓 Loading 頁面淡出
+                    document.body.classList.add('fonts-ready');
+
+		// 2.關鍵：等待 Loading 頁面消失 (約 1.5s - 2s) 後，才讓 Tutorial 登場
+            setTimeout(() => {
+                const tutorial = document.getElementById('tutorial-overlay');
+                if (tutorial) {
+                    // 加上 active 觸發 CSS 動畫
+                    tutorial.classList.add('active');
+		}
+            }, 200);
+                    
+                    
+                    const loader = document.getElementById('initial-loader');
+		      if(loader) loader.style.pointerEvents = 'none';
+                    setTimeout(() => { 
+                if(loader) loader.style.display = 'none'; 
+          	  }, 2000);
+                }, 400); 
+            }
+        }
+
+        async function waitForFonts() {
+            await document.fonts.ready;
+            return new Promise((resolve) => {
+                const checkFonts = () => {
+                    const isWenKaiReady = document.fonts.check('1em "LXGW WenKai TC"');
+                    const isMontReady = document.fonts.check('1em "Montserrat"');
+                    
+                    if (isWenKaiReady && isMontReady) {
+                        resolve(); 
+                    } else {
+                        setTimeout(checkFonts, 100); 
+                    }
+                };
+                checkFonts();
+            });
+        }
+
+        waitForFonts().then(() => {
+            fontsReadyStatus = true;
+            updateProgress(50); 
+            checkOverallReady();
+        });
+
+        // 縮短超時安全機制至 4.5 秒 (若網路異常強行解鎖)
+        setTimeout(() => {
+            if (!fontsReadyStatus || !playerReadyStatus) {
+                fontsReadyStatus = true;
+                playerReadyStatus = true;
+                updateProgress(100);
+                checkOverallReady();
+            }
+        }, 4500);
+
+	if (tutorialOverlay) {
+	tutorialOverlay.addEventListener('click', (e) => {
+  	  triggerHaptic();
+
+    const star = document.getElementById('placeholder');
+    const rect = star.getBoundingClientRect();
+    // 檢查是否點擊在星星範圍內
+    const isStarClicked = (e.clientX >= rect.left && e.clientX <= rect.right &&
+                           e.clientY >= rect.top && e.clientY <= rect.bottom);
+
+	if (isPlayerReady && player) {
+    		if (isStarClicked) {
+        // 如果點到星星，直接觸發星星的播放邏輯，不需要額外解鎖
+        star.click();
+    } else {
+            player.setVolume(0);
+            player.playVideo();
+            setTimeout(() => {
+                // 只有在沒進入歌詞頁的情況下才暫停
+                if (!card.classList.contains('revealed')) {
+                    player.pauseVideo();
+                    player.setVolume(100);
+                }
+            }, 150);
+        }
+    }
+
+    // 移除蒙版
+   tutorialOverlay.classList.remove('active');
+
+    setTimeout(() => {
+        tutorialOverlay.style.display = 'none';
+	tutorialOverlay.remove();
+   		 }, 800);
+	});
+}
+
+// 2. 修正星星點擊邏輯，確保進入歌詞頁時一定會嘗試載入影片
+placeholder.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (card.classList.contains('revealed')) return;
+    triggerHaptic();
+    
+    if (!current) rollNextLyric();
+
+    if (isPlayerReady) {
+        // 不管現在是不是 Muted，都要叫它 Load 影片，否則進度條不會跑
+	player.setVolume(0);
+        player.loadVideoById({
+            videoId: current.ytId,
+            startSeconds: current.start || 0
+		
+        });
+        player.playVideo();
         
+        // 如果不是靜音，就漸入音量
+        if (!isMuted) {
+            setTimeout(() => { fadeAudioIn(); }, 200);
+        } else {
+            player.setVolume(0); // 如果是靜音，確保音量為 0
+        }
+    }
+    
+    card.classList.add('revealed');
+});
+
+        
+	// 在你的 resetBtn 點擊事件中
+if (resetBtn) {
+resetBtn.addEventListener('click', () => {
+    // 1. 漸出音樂並暫停
+    fadeAudioOut();
+    
+    // 2. UI 回到主頁
+    card.classList.remove('revealed');
+    
+    // 3. 【關鍵】提前抽取下一首歌的數據 (但不播放)
+    // 這樣下次點星星時，current 已經有值了，可以直接 loadVideoById
+    setTimeout(() => {
+        rollNextLyric(); 
+    }, 500); 
+});
+}
+
 
         // ===== Youtube 控制器相關變數與函數 =====
         let player;
@@ -759,7 +899,9 @@ function updateProgress(val) {
             }, 400);
         });
 
-        function getCleanBgSnapshot() {
+
+
+	function getCleanBgSnapshot() {
             const tempCanvas = document.createElement('canvas'); tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
             const tCtx = tempCanvas.getContext('2d'); tCtx.fillStyle = isDark ? '#0a0a0b' : '#fdfdfd'; tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
             particles.forEach((p, i) => { p.draw(tCtx); for(let j = i + 1; j < particles.length; j++) { const d = Math.hypot(p.x - particles[j].x, p.y - particles[j].y); if(d < 140) { tCtx.beginPath(); tCtx.strokeStyle = isDark ? `rgba(0, 242, 255, ${(1 - d/140) * 0.2})` : `rgba(96, 165, 250, ${(1 - d/140) * 0.2})`; tCtx.lineWidth = 0.5; tCtx.moveTo(p.x, p.y); tCtx.lineTo(particles[j].x, particles[j].y); tCtx.stroke(); } } });
@@ -835,67 +977,9 @@ function updateProgress(val) {
 
         function showToast(msg) { toast.innerText = msg; toast.style.opacity = '1'; setTimeout(() => toast.style.opacity = '0', 3000); }
 
-        // ===== 總進度監聽機制 =====
-        let fontsReadyStatus = false;
-        let playerReadyStatus = false;
 
-        function checkOverallReady() {
-            if (fontsReadyStatus && playerReadyStatus) {
-                updateProgress(100);
-                setTimeout(() => {
-                    document.body.classList.add('fonts-ready');
-                    const loader = document.getElementById('initial-loader');
-                    setTimeout(() => { loader.style.display = 'none'; }, 2000);
-                }, 400); 
-            }
-        }
 
-        async function waitForFonts() {
-            await document.fonts.ready;
-            return new Promise((resolve) => {
-                const checkFonts = () => {
-                    const isWenKaiReady = document.fonts.check('1em "LXGW WenKai TC"');
-                    const isMontReady = document.fonts.check('1em "Montserrat"');
-                    
-                    if (isWenKaiReady && isMontReady) {
-                        resolve(); 
-                    } else {
-                        setTimeout(checkFonts, 100); 
-                    }
-                };
-                checkFonts();
-            });
-        }
 
-        waitForFonts().then(() => {
-            fontsReadyStatus = true;
-            updateProgress(50); 
-            checkOverallReady();
-        });
-
-        // 縮短超時安全機制至 4.5 秒 (若網路異常強行解鎖)
-        setTimeout(() => {
-            if (!fontsReadyStatus || !playerReadyStatus) {
-                fontsReadyStatus = true;
-                playerReadyStatus = true;
-                updateProgress(100);
-                checkOverallReady();
-            }
-        }, 4500);
-// 在你的 backBtn 點擊事件中
-backBtn.addEventListener('click', () => {
-    // 1. 漸出音樂並暫停
-    fadeAudioOut();
-    
-    // 2. UI 回到主頁
-    card.classList.remove('revealed');
-    
-    // 3. 【關鍵】提前抽取下一首歌的數據 (但不播放)
-    // 這樣下次點星星時，current 已經有值了，可以直接 loadVideoById
-    setTimeout(() => {
-        rollNextLyric(); 
-    }, 500); 
-});
     </script>
 </body>
 </html>
