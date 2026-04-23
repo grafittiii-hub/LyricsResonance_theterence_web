@@ -308,7 +308,7 @@
 
     <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 0; height: 0;"></div>
     
-    <button class="mute-control" id="mute-btn">♪</button>
+    <button class="mute-control" id="mute-btn">■</button>
 
     <div id="export-container"></div>
     <div id="qr-hidden" style="display:none;"></div>
@@ -475,7 +475,7 @@
         // ===== Youtube 控制器相關變數與函數 =====
         let player;
         let isPlayerReady = false;
-        let isMuted = false;
+        let isMuted = true;
         let fadeInterval;
 
         // 2. 強化版預加載邏輯
@@ -542,7 +542,7 @@ setTimeout(() => {
         function fadeAudioIn() {
             if (!isPlayerReady || isMuted) return;
             clearInterval(fadeInterval);
-            player.setVolume(0);
+           
             player.playVideo(); 
             let vol = 0;
             fadeInterval = setInterval(() => {
@@ -552,7 +552,7 @@ setTimeout(() => {
                     clearInterval(fadeInterval);
                 }
                 player.setVolume(vol);
-            }, 50); 
+            }, 30); 
         }
 
         function fadeAudioOut() {
@@ -581,6 +581,11 @@ setTimeout(() => {
                 } else {
                     fadeAudioIn();
                 }
+} else if (!isMuted && isPlayerReady) {
+        // 【新增邏輯】如果在首頁點擊「解除靜音」，我們先靜音播放再暫停
+        // 這是為了繞過瀏覽器的限制，讓後續播放順暢
+        player.playVideo();
+        setTimeout(() => { if(!card.classList.contains('revealed')) player.pauseVideo(); }, 100);
             }
         });
 
