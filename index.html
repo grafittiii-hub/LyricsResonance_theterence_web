@@ -259,13 +259,26 @@
             transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s; 
         }
         .card.revealed .action-area-inner { 
-            opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto;
+            opacity: 1; visibility: visible; transform: translateY(0); pointer-evdeents: auto;
             transition: opacity 0.8s 0.4s ease, transform 0.8s 0.4s ease; 
         }
         
         .btn { border: none; border-radius: 8px; padding: 11px; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; font-family: 'LXGW WenKai TC', sans-serif; display: flex; align-items: center; justify-content: center; letter-spacing: 0.3em; text-indent: 0.3em; }
-        .btn-primary { background: var(--text-main); color: var(--bg-color); }
-        .btn-secondary { background: transparent; border: 0.5px solid var(--btn-border); color: var(--text-sub); }
+        .btn-primary { background: var(--text-main); color: var(--bg-color);border: 0.5px solid transparent; /* 預設透明邊框，防止抖動 */
+    transition: all 0.3s ease;
+    cursor: pointer; }
+        .btn-secondary { background: transparent; border: 0.5px solid var(--btn-border); color: var(--text-sub);transition: all 0.3s ease;
+    cursor: pointer; }
+	.btn-primary:hover {
+    border-color: var(--star-color);     /* 邊框變藍 */
+    transform: translateY(-2px); /* 輕微上浮感 */
+}
+
+	.btn-secondary:hover {
+    border-color: var(--star-color);     /* 邊框變藍 */
+    background-color: rgba(0, 122, 255, 0.05); /* 淡淡的藍色背景，增加點擊感 */
+    transform: translateY(-2px); /* 輕微上浮感 */
+}
 
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); gap: 20px; }
         .spinner { width: 24px; height: 24px; border: 2px solid rgba(128,128,128,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -426,7 +439,7 @@
             { s: "Make a Move", t: "即管扮呷醋<br>根本愛情充滿套路", i: "愛情是一場心照不宣的博弈。那些幼稚的試探與偽裝，不過是為了確認自己在你眼中的重要性。", u: "https://youtu.be/vG4oFkttvq4", ytId: "vG4oFkttvq4", start:32 },
             { s: "Make a Move", t: "要後退一小步<br>再帶點吞吐<br>靜待你的追捕", i: "戀愛最迷人的時刻，往往在於那種若即若離的曖昧。故意留下線索，只為引你入懷。", u: "https://youtu.be/vG4oFkttvq4", ytId: "vG4oFkttvq4", start:108 },
             { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "深宵沒你 晚霞沒你<br>似乎 人要錯失方知見微", i: "身邊少了你，卻處處都是你。遺憾是，只能思憶追悔。", u: "https://youtu.be/EWispEWX3X4", ytId: "EWispEWX3X4", start:33 },
-            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "與你共渡 世界在塌下<br>真的末日 有你亦瀟灑", i: "如果結局注定是崩塌，那我有你就好。屆時，末日也不過是場壯麗的背景。", u: "https://youtu.be/EWispEWX3X4", ytId: "EWispEWX3X4", start:152 },
+            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "與你共渡 世界在塌下<br>真的末日 有你亦瀟灑", i: "如果結局注定是崩塌，那我有你就好。屆時，末日也不過是場壯麗的背景。", u: "https://youtu.be/EWispEWX3X4", ytId: "EWispEWX3X4", start:153 },
             { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "吸一啖氣 放緩步履<br>眼前 人錯過至珍惜太悲", i: "學會慢下來，是為了看清眼前的珍貴。別等到只剩下背影，才想起要伸出那隻手。", u: "https://youtu.be/EWispEWX3X4", ytId: "EWispEWX3X4", start:196 },
             { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "Even if you starting losing your hold<br>Please never never being hopeless", i: "在最絕望的深淵，只要你還在呼吸，就依然有重新站起的理由。", u: "https://youtu.be/EWispEWX3X4", ytId: "EWispEWX3X4", start:128 },
             { s: "Let's Never…", t: "觸不到 終於知道<br>早應說愛不吞吐", i: "遺憾是那句來不及說出口的真心話。有些距離不是因為遠，而是因為我們在該勇敢的時候選擇了沈默。", u: "https://youtu.be/vYL5odhxlVY", ytId: "vYL5odhxlVY", start:34 },
@@ -441,7 +454,7 @@
             { s: "Dreamer", t: "(I’ll be a) Dreamer<br>dreaming about you", i: "所有的白日夢裡都有你的存在。如果現實太沈重，那就讓我們在夢境裡無限期延長那份相會。", u: "https://youtu.be/tbQkwoPkuYE", ytId: "tbQkwoPkuYE", start:53 },
             { s: "Dreamer", t: "萬大事你身邊起碼<br>我為你擋下", i: "在你最脆弱的時刻，我依然會為你擋下所有風霜。我不是什麼英雄，只是一個愛你的人。", u: "https://youtu.be/tbQkwoPkuYE", ytId: "tbQkwoPkuYE", start:83 },
             { s: "DAY DAY BIRTHDAY", t: "Everyday 享受一起<br>重生地 歡呼 躍起<br>Celebrate Everyday", i: "只要和你在一起，每一分每一秒都是一場快樂慶典。", u: "https://youtu.be/m1CWHt_R9Jk", ytId: "m1CWHt_R9Jk", start:46 },
-            { s: "DAY DAY BIRTHDAY", t: "想就一起<br>隨意地 高歌 報喜", i: "快樂不需要挑日子。只要當下的心境對了，隨時隨地都能歡唱。", u: "https://youtu.be/m1CWHt_R9Jk", ytId: "m1CWHt_R9Jk", start:119 }
+            { s: "DAY DAY BIRTHDAY", t: "想就一起<br>隨意地 高歌 報喜", i: "快樂不需要挑日子。只要當下的心境對了，隨時隨地都能歡唱。", u: "https://youtu.be/m1CWHt_R9Jk", ytId: "m1CWHt_R9Jk", start:120 }
         ];
 
         lyricsDB.forEach(item => {
@@ -581,7 +594,7 @@ setTimeout(() => {
                     clearInterval(fadeInterval);
                 }
                 player.setVolume(vol);
-            }, 50); 
+            }, 30); 
         }
 
         muteBtn.addEventListener('click', (e) => {
