@@ -119,6 +119,51 @@
 
         #bg-canvas { position: absolute; top: 0; left: 0; z-index: 0; }
 
+	.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 核心：徑向漸變，中心透明，向外變深灰色 */
+    background: radial-gradient(circle at center, transparent 80px, rgba(0, 0, 0, 0.6) 150px);
+    z-index: 5000; /* 低於 loader 但高於其他內容 */
+    display: none; /* 初始隱藏 */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.5s ease;
+    backdrop-filter: blur(2px); /* 輕微模糊背景更有質感 */
+}
+
+/* 文字樣式 */
+.tutorial-content {
+    text-align: center;
+    pointer-events: none; /* 讓文字不擋住點擊 */
+}
+
+.tutorial-text {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--star-color);
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    margin-bottom: 120px; /* 根據星星位置調整，將文字推到星星上方 */
+    text-transform: uppercase;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-10px);}
+    60% {transform: translateY(-5px);}
+}
+
+/* 當 App 準備好時顯示蒙版 */
+.fonts-ready .tutorial-overlay {
+    display: flex;
+}
+
         .theme-toggle {
             position: absolute; top: 25px; right: 20px; z-index: 40;
             pointer-events: auto; background: transparent;
@@ -277,7 +322,7 @@
         
         .btn { border-radius: 8px; padding: 11px; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; font-family: 'LXGW WenKai TC', sans-serif; display: flex; align-items: center; justify-content: center; letter-spacing: 0.3em; text-indent: 0.3em; border: 1px solid transparent; /* 預設先給透明邊框 */
     box-sizing: border-box; /* 確保邊框不增加按鈕寬度 */}
-        .btn-primary { background: var(--text-main); color: var(--bg-color);border: 0.5px solid transpbarent; /* 預設透明邊框，防止抖動 */
+        .btn-primary { background: var(--text-main); color: var(--bg-color); border: 0.5px solid transpbarent; /* 預設透明邊框，防止抖動 */
  ; transition: all 0.3s ease;
     cursor: pointer; }
         .btn-secondary { background: transparent; border: 0.5px solid var(--btn-border); color: var(--text-sub);transition: all 0.3s ease;
@@ -317,6 +362,13 @@
             <div class="progress-bar-fill" id="init-progress"></div>
         </div>
     </div>
+
+	<div id="tutorial-overlay" class="tutorial-overlay">
+   	 <div class="tutorial-content">
+       		<div class="tutorial-text">Click the Star</div>
+        	<div class="tutorial-sub">點擊星辰</div>
+    	</div>
+  	</div>
 
     <button class="theme-toggle" id="theme-btn">⚪︎地球</button>
     <canvas id="bg-canvas"></canvas>
@@ -359,12 +411,12 @@
     <script>
         const canvas = document.getElementById('bg-canvas');
         canvas.style.opacity = "0"; // 初始不可見
-        canvas.style.transition = "opacity 1s ease"; // 設定漸入動畫
+        canvas.style.transition = "opacity 0.5s ease"; // 設定漸入動畫
         
-        // 關鍵修復 2：補回 3 秒後讓粒子浮現的觸發器
+        // 關鍵修復 2：補回 0.8 秒後讓粒子浮現的觸發器
         setTimeout(() => {
             canvas.style.opacity = "1";
-        }, 1500);
+        }, 800);
 
         const ctx = canvas ? canvas.getContext('2d') : null;
         const themeBtn = document.getElementById('theme-btn');
@@ -431,6 +483,42 @@
         window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON') ripples.push(new Ripple(e.touches[0].clientX, e.touches[0].clientY)); });
         window.addEventListener('resize', resize);
         themeBtn.addEventListener('click', (e) => { e.stopPropagation(); isDark = !isDark; document.body.setAttribute('data-theme', isDark ? 'dark' : 'light'); themeBtn.innerText = isDark ? '⚫︎月球' : '⚪︎地球'; });
+
+	const tutorialOverlay = document.getElementById('tutorial-overlay');
+
+tutorialOverlay.addEventListener('click', (e) => {
+    // 1. 執行 Haptic 反饋
+    triggerHaptic();
+
+    // 2. 【核心】音訊授權解鎖
+    if (isPlayerReady && player) {
+        // 先播放一個「靜音」的動作來騙過瀏覽器
+        player.setVolume(0);
+        player.playVideo();
+        
+        // 0.2秒後暫停，此時授權已完成！
+        setTimeout(() => {
+            player.pauseVideo();
+            player.setVolume(100); // 恢復音量備用
+        }, 200);
+    }
+
+    // 3. 移除蒙版
+    tutorialOverlay.style.opacity = '0';
+    setTimeout(() => {
+        tutorialOverlay.style.display = 'none';
+    }, 500);
+
+    // 4. (選配) 如果用戶點擊的位置剛好是星星，直接觸發翻牌
+    // 如果不加這段，用戶就要再點一次星星才能看歌詞
+    const star = document.querySelector('.placeholder');
+    const rect = star.getBoundingClientRect();
+    if (e.clientX >= rect.left && e.clientX <= rect.right &&
+        e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        star.click();
+    }
+});
+
 
         function getYTIdFromUrl(url) {
             let match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/))([^?&]+)/);
@@ -533,10 +621,6 @@ function updateProgress(val) {
     }
 }
 
-// 0.1秒後背景粒子漸入
-setTimeout(() => {
-    canvas.style.opacity = "1";
-}, 100);
         
         // 優化：確保此全域函數定義在載入 API 之前
         window.onYouTubeIframeAPIReady = function() {
